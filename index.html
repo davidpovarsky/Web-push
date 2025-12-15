@@ -32,7 +32,7 @@
   <div class="card">
     <h1>📲 PWA Push – דף בדיקה</h1>
     <div class="muted">
-      זה דף “שלד” שמכין את כל הדרוש ל-Web Push: Manifest + Service Worker + Permission + Subscription.<br/>
+      זה דף "שלד" שמכין את כל הדרוש ל-Web Push: Manifest + Service Worker + Permission + Subscription.<br/>
       ב-iPad/iOS זה יעבוד לקבלת Push רק כשהאתר מותקן למסך הבית דרך Safari.
     </div>
 
@@ -52,12 +52,10 @@
     // ====== הגדרות שחייבים להתאים אצלך ======
 
     // ✅ VAPID Public Key (Base64URL) מהשרת שלך
-    // דוגמה: "BOr...KQ"  (זה לא המפתח האמיתי)
-const VAPID_PUBLIC_KEY = "BIyT1-c4ZPR6dZn6uU0cZAfZdN3lySvRRr1HG7pFQ9r43RSWWUfY0gUVXh4-M06D9nouxgzXKiJA_-bYJRAcgJ8";
+    const VAPID_PUBLIC_KEY = "BIyT1-c4ZPR6dZn6uU0cZAfZdN3lySvRRr1HG7pFQ9r43RSWWUfY0gUVXh4-M06D9nouxgzXKiJA_-bYJRAcgJ8";
 
     // ✅ URL בשרת שלך שמקבל subscription ושומר אותו
-    // (GitHub Pages הוא סטטי, אז חייבים endpoint חיצוני)
-const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfunctions.net/subscribe";
+    const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfunctions.net/subscribe";
 
     // ====== UI helpers ======
     const $log = document.querySelector("#log code");
@@ -93,9 +91,8 @@ const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfun
         return;
       }
       try {
-        // חשוב: sw.js צריך להיות באותה תיקייה כדי שה-scope יהיה נכון ב-GitHub Pages
         swReg = await navigator.serviceWorker.register("./sw.js");
-        setStatus("Service Worker נרשם ✔");
+        setStatus("Service Worker נרשם ✓");
         log("✅ SW registered. scope =", swReg.scope);
       } catch (e) {
         setStatus("נכשל רישום Service Worker", false);
@@ -111,9 +108,9 @@ const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfun
         return;
       }
       try {
-        const p = await Notification.requestPermission(); // חייב להיות אחרי לחיצה
+        const p = await Notification.requestPermission();
         log("Permission =", p);
-        if (p === "granted") setStatus("הרשאה אושרה ✔");
+        if (p === "granted") setStatus("הרשאה אושרה ✓");
         else setStatus("הרשאה לא אושרה (" + p + ")", false);
       } catch (e) {
         setStatus("שגיאה בבקשת הרשאה", false);
@@ -149,7 +146,7 @@ const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfun
         if (existing) {
           log("ℹ️ כבר קיים subscription. משתמשים בו.");
           await sendSubscriptionToServer(existing);
-          setStatus("כבר היית מנוי ✔");
+          setStatus("כבר היית מנוי ✓");
           logSubscription(existing);
           return;
         }
@@ -159,7 +156,7 @@ const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfun
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
         });
 
-        setStatus("נוצר מנוי Push ✔");
+        setStatus("נוצר מנוי Push ✓");
         logSubscription(sub);
 
         await sendSubscriptionToServer(sub);
@@ -182,14 +179,29 @@ const SERVER_SUBSCRIBE_URL = "https://us-central1-web-push-server-d28f2.cloudfun
         log("⚠️ SERVER_SUBSCRIBE_URL לא מוגדר. מדלגים שליחה לשרת.");
         return;
       }
-     const payload = sub.toJSON();
-      const res = await fetch(SERVER_SUBSCRIBE_URL, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
-});
+      
+      const payload = sub.toJSON();
+      log("שולח לשרת:", payload);
+      
+      try {
+        const res = await fetch(SERVER_SUBSCRIBE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      if (!res.ok) throw new Error("Server responded " + res.status);
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          log("❌ תגובת שרת:", res.status, errText);
+          throw new Error("Server responded " + res.status);
+        }
+        
+        const responseData = await res.text();
+        log("✅ תגובה מהשרת:", responseData);
+      } catch (e) {
+        log("❌ שגיאה בשליחה לשרת:", String(e));
+        throw e;
+      }
     }
 
     // ====== Buttons ======
