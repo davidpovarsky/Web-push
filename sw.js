@@ -1,41 +1,31 @@
 /* sw.js */
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (e) => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+self.addEventListener("activate", (e) => {
+  e.waitUntil(self.clients.claim());
 });
 
 /* =========================
-   קבלת PUSH מהשרת
+   קבלת PUSH
 ========================= */
 
 self.addEventListener("push", (event) => {
   let data = {};
-
   try {
     data = event.data ? event.data.json() : {};
-  } catch (e) {}
+  } catch {}
 
   const title = data.title || "התראה";
-  const body  = data.body  || "לחץ לפתיחה";
-
-  // הקישור שאנחנו רוצים להפעיל (למשל shortcuts://...)
-  const pushUrl = data.url || "";
-
-  const options = {
-    body,
-    icon: "./icon-192.png",
-    badge: "./icon-192.png",
-    data: {
-      pushUrl
-    }
-  };
+  const body  = data.body  || "";
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(title, {
+      body,
+      data: { body }
+    })
   );
 });
 
@@ -46,13 +36,12 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const pushUrl = event.notification.data?.pushUrl || "";
+  const body = event.notification.data?.body || "";
 
-  // פותחים את האפליקציה במצב "הופעל ע״י push"
-  const targetUrl =
-    "./index.html?pushUrl=" + encodeURIComponent(pushUrl);
+  const target =
+    "./index.html?pushBody=" + encodeURIComponent(body);
 
   event.waitUntil(
-    clients.openWindow(targetUrl)
+    clients.openWindow(target)
   );
 });
