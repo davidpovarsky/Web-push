@@ -1,11 +1,15 @@
 /* sw.js */
 
-self.addEventListener("install", (e) => {
+/* =========================
+   התקנה והפעלה
+========================= */
+
+self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(self.clients.claim());
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
 });
 
 /* =========================
@@ -14,17 +18,25 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("push", (event) => {
   let data = {};
+  let body = "";
+
   try {
-    data = event.data ? event.data.json() : {};
-  } catch {}
+    if (event.data) {
+      data = event.data.json();
+      body = data.body || "";
+    }
+  } catch (e) {
+    body = event.data ? event.data.text() : "";
+  }
 
   const title = data.title || "התראה";
-  const body  = data.body  || "";
 
   event.waitUntil(
     self.registration.showNotification(title, {
-      body,
-      data: { body }
+      body: body,
+      data: {
+        pushBody: body
+      }
     })
   );
 });
@@ -36,12 +48,16 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const body = event.notification.data?.body || "";
+  const pushBody =
+    event.notification.data &&
+    event.notification.data.pushBody
+      ? event.notification.data.pushBody
+      : "";
 
-  const target =
-    "./index.html?pushBody=" + encodeURIComponent(body);
+  const targetUrl =
+    "./index.html?pushBody=" + encodeURIComponent(pushBody);
 
   event.waitUntil(
-    clients.openWindow(target)
+    clients.openWindow(targetUrl)
   );
 });
