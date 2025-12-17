@@ -5,60 +5,26 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>PWA Push – בדיקה</title>
 
-  <!-- PWA -->
   <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#111111" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Arial;
-      margin: 0;
-      padding: 18px;
-      background: #0b0b0b;
-      color: #f3f3f3;
-    }
-    .card {
-      background: #151515;
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 14px;
-      max-width: 720px;
-    }
-    h1 { margin: 0 0 10px; font-size: 20px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
-    button {
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    button.primary { background: #2e7dff; color: #fff; }
-    button.secondary { background: #2a2a2a; color: #fff; }
-    button.warn { background: #ffb74d; color: #000; }
-    .muted { color: #bdbdbd; font-size: 13px; line-height: 1.35; }
-    pre {
-      background: #0f0f0f;
-      border: 1px solid #262626;
-      border-radius: 12px;
-      padding: 12px;
-      overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-    .ok { color: #6bff95; }
-    .bad { color: #ff6b6b; }
-
-    .debugBox {
-      margin-top: 14px;
-      background: #0f0f0f;
-      border: 1px dashed #3a3a3a;
-      border-radius: 12px;
-      padding: 12px;
-    }
+    body { font-family: system-ui, -apple-system, Segoe UI, Arial; margin:0; padding:18px; background:#0b0b0b; color:#f3f3f3; }
+    .card { background:#151515; border:1px solid #2a2a2a; border-radius:14px; padding:14px; max-width:720px; }
+    h1 { margin:0 0 10px; font-size:20px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }
+    button { border:0; border-radius:12px; padding:10px 12px; font-size:14px; cursor:pointer; }
+    button.primary { background:#2e7dff; color:#fff; }
+    button.secondary { background:#2a2a2a; color:#fff; }
+    button.warn { background:#ffb74d; color:#000; }
+    .muted { color:#bdbdbd; font-size:13px; line-height:1.35; }
+    pre { background:#0f0f0f; border:1px solid #262626; border-radius:12px; padding:12px; overflow:auto; white-space:pre-wrap; word-break:break-word; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; }
+    .ok { color:#6bff95; }
+    .bad { color:#ff6b6b; }
+    .debugBox { margin-top:14px; background:#0f0f0f; border:1px dashed #3a3a3a; border-radius:12px; padding:12px; }
   </style>
 </head>
 <body>
@@ -67,11 +33,10 @@
   <h1>📲 PWA Push – דף בדיקה</h1>
 
   <div class="muted">
-    דף מלא לרישום Web Push + טיפול ב־Push שמכיל פקודה להרצת קיצור.<br>
-    אם iOS חוסם פתיחה אוטומטית – יוצג כפתור ידני.
+    תומך בשתי שיטות: <b>pushUrl</b> (אם השרת באמת מעביר url) + <b>pushBody</b> (fallback).<br>
+    אם פתיחה אוטומטית נחסמת – יש כפתור ידני.
   </div>
 
-  <!-- ====== כפתורים מקוריים ====== -->
   <div class="row" style="margin-top:12px;">
     <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
     <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
@@ -80,18 +45,22 @@
 
   <div class="muted" id="statusLine">סטטוס: …</div>
 
-  <!-- ====== דיבוג Push ====== -->
   <div class="debugBox">
-    <h3>📩 מידע שהתקבל מה-Push</h3>
+    <h3>📩 מה הגיע מה-Push</h3>
+    <div class="muted">pushUrl (מה־URL parameter):</div>
+    <pre id="pushUrlBox">—</pre>
+
+    <div class="muted">pushBody (מה־URL parameter):</div>
     <pre id="pushRaw">—</pre>
 
-    <h3>🧩 פיענוח</h3>
+    <div class="muted">פיענוח SHORTCUT/PARAM מה־body:</div>
     <pre id="pushParsed">—</pre>
 
+    <div class="muted">הקישור שייפתח בפועל:</div>
+    <pre id="finalUrlBox">—</pre>
+
     <div id="actionArea" style="display:none;margin-top:10px">
-      <button id="btnRunShortcut" class="warn">
-        ▶️ הפעל קיצור דרך
-      </button>
+      <button id="btnRunShortcut" class="warn">▶️ הפעל ידנית</button>
     </div>
   </div>
 
@@ -101,7 +70,7 @@
 
 <script>
 /* =========================
-   הגדרות מקוריות
+   הגדרות (כמו אצלך)
 ========================= */
 
 const VAPID_PUBLIC_KEY =
@@ -118,16 +87,13 @@ const $log = document.querySelector("#log code");
 const $status = document.querySelector("#statusLine");
 
 function log(...args) {
-  const line = args.map(a =>
-    typeof a === "string" ? a : JSON.stringify(a, null, 2)
-  ).join(" ");
+  const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
   $log.textContent += line + "\n";
   $log.parentElement.scrollTop = $log.parentElement.scrollHeight;
 }
 
 function setStatus(text, ok=true) {
-  $status.innerHTML =
-    `סטטוס: <span class="${ok ? "ok":"bad"}">${text}</span>`;
+  $status.innerHTML = `סטטוס: <span class="${ok ? "ok":"bad"}">${text}</span>`;
 }
 
 /* =========================
@@ -136,13 +102,10 @@ function setStatus(text, ok=true) {
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i)
-    outputArray[i] = rawData.charCodeAt(i);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
   return outputArray;
 }
 
@@ -185,80 +148,84 @@ async function subscribePush() {
 }
 
 /* =========================
-   🔥 טיפול ב-Push Body
+   Push → קיצור דרך
 ========================= */
 
-let lastShortcutUrl = null;
+let lastFinalUrl = null;
+
+function getParam(name) {
+  return new URLSearchParams(location.search).get(name) || "";
+}
 
 function parseBody(body) {
   const out = {};
   body.split(";").forEach(p => {
-    const [k,v] = p.split("=");
+    const [k, v] = p.split("=");
     if (k && v) out[k.trim()] = v.trim();
   });
   return out;
 }
 
 function buildShortcutUrl(name, param) {
-  let url =
-    "shortcuts://run-shortcut" +
-    "?name=" + encodeURIComponent(name);
-
-  if (param) {
-    url +=
-      "&input=text" +
-      "&text=" + encodeURIComponent(param);
-  }
+  let url = "shortcuts://run-shortcut?name=" + encodeURIComponent(name);
+  if (param) url += "&input=text&text=" + encodeURIComponent(param);
   return url;
 }
 
-function tryOpenShortcut(url) {
-  log("🚀 מנסה לפתוח:", url);
+function tryOpen(url) {
+  lastFinalUrl = url;
+  document.getElementById("finalUrlBox").textContent = url;
+  document.getElementById("actionArea").style.display = "block";
 
-  // ניסיון אוטומטי (iOS לפעמים חוסם)
+  log("🚀 trying to open:", url);
+
+  // ניסיון אוטומטי (עבד אצלך)
   setTimeout(() => {
     window.location.href = url;
   }, 700);
-
-  // כפתור ידני כ־fallback
-  document.getElementById("actionArea").style.display = "block";
 }
 
 window.addEventListener("load", () => {
-  const pushBody =
-    new URLSearchParams(location.search).get("pushBody");
+  const pushUrl = decodeURIComponent(getParam("pushUrl"));
+  const pushBody = decodeURIComponent(getParam("pushBody"));
 
-  if (!pushBody) return;
+  document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
+  document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
 
-  const decoded = decodeURIComponent(pushBody);
-  document.getElementById("pushRaw").textContent = decoded;
-
-  const parsed = parseBody(decoded);
+  const parsed = pushBody ? parseBody(pushBody) : {};
   document.getElementById("pushParsed").textContent =
-    JSON.stringify(parsed, null, 2);
+    Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
 
-  log("Push body received:", decoded);
+  log("pushUrl param =", pushUrl || "(empty)");
+  log("pushBody param =", pushBody || "(empty)");
 
-  if (parsed.SHORTCUT) {
-    lastShortcutUrl =
-      buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
-
-    tryOpenShortcut(lastShortcutUrl);
+  // ✅ עדיפות 1: אם הגיע pushUrl והוא כבר shortcuts:// → פותחים אותו
+  if (pushUrl && pushUrl.startsWith("shortcuts://")) {
+    setStatus("נפתח מ-Push (pushUrl) ✓");
+    tryOpen(pushUrl);
+    return;
   }
+
+  // ✅ עדיפות 2: אם לא הגיע url, נבנה מה-body
+  if (parsed.SHORTCUT) {
+    const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
+    setStatus("נפתח מ-Push (pushBody) ✓");
+    tryOpen(url);
+    return;
+  }
+
+  // אחרת: פתיחה רגילה
+  setStatus("נפתח רגיל (אין pushUrl/SHORTCUT)", true);
+  document.getElementById("finalUrlBox").textContent = "—";
+  document.getElementById("actionArea").style.display = "none";
 });
 
-/* =========================
-   כפתור ידני
-========================= */
-
 document.getElementById("btnRunShortcut").onclick = () => {
-  if (lastShortcutUrl) {
-    window.location.href = lastShortcutUrl;
-  }
+  if (lastFinalUrl) window.location.href = lastFinalUrl;
 };
 
 /* =========================
-   חיבור כפתורים
+   כפתורים
 ========================= */
 
 btnInit.onclick = initServiceWorker;
