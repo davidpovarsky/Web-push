@@ -5,213 +5,153 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>PWA Push – בדיקה</title>
 
-  <!-- ✅ חובה ל-PWA -->
   <link rel="manifest" href="./manifest.json" />
 
-  <!-- ✅ מומלץ ל-iOS -->
   <meta name="theme-color" content="#111111" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Arial; margin: 0; padding: 18px; background: #0b0b0b; color: #f3f3f3; }
-    .card { background: #151515; border: 1px solid #2a2a2a; border-radius: 14px; padding: 14px; max-width: 720px; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Arial;
+      margin: 0;
+      padding: 18px;
+      background: #0b0b0b;
+      color: #f3f3f3;
+    }
+    .card {
+      background: #151515;
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 14px;
+      max-width: 720px;
+    }
     h1 { margin: 0 0 10px; font-size: 20px; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
-    button { border: 0; border-radius: 12px; padding: 10px 12px; font-size: 14px; cursor: pointer; }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
     button.primary { background: #2e7dff; color: #fff; }
     button.secondary { background: #2a2a2a; color: #fff; }
     .muted { color: #bdbdbd; font-size: 13px; line-height: 1.35; }
-    pre { background: #0f0f0f; border: 1px solid #262626; border-radius: 12px; padding: 12px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    pre {
+      background: #0f0f0f;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
     .ok { color: #6bff95; }
     .bad { color: #ff6b6b; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>📲 PWA Push – דף בדיקה</h1>
-    <div class="muted">
-      זה דף "שלד" שמכין את כל הדרוש ל-Web Push: Manifest + Service Worker + Permission + Subscription.<br/>
-      ב-iPad/iOS זה יעבוד לקבלת Push רק כשהאתר מותקן למסך הבית דרך Safari.
-    </div>
 
-    <div class="row" style="margin-top:12px;">
-      <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
-      <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
-      <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
-    </div>
-
-    <div class="muted" id="statusLine">סטטוס: …</div>
-
-    <h3 style="margin:14px 0 8px; font-size:15px;">לוג</h3>
-    <pre id="log"><code></code></pre>
+<div class="card">
+  <h1>📲 PWA Push – דף בדיקה</h1>
+  <div class="muted">
+    אפליקציית Web Push ל-iOS.<br>
+    אם הדף נפתח בעקבות Push – הוא יפעיל קישור שהועבר אליו.
   </div>
 
-  <script>
-    // ====== הגדרות שחייבים להתאים אצלך ======
+  <div class="row">
+    <button id="btnInit" class="secondary">1) אתחל</button>
+    <button id="btnPermission" class="primary">2) בקש הרשאה</button>
+    <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
+  </div>
 
-    // ✅ VAPID Public Key (Base64URL) מהשרת שלך
-    const VAPID_PUBLIC_KEY = "BAp0IsBi_hZVABIWbGTulbZBur4MxL_dboeLimq2sxAvhN_B8WbNPY6g_mqutJVC3LhOWAnDQNwXujQzYNR3s0U";
+  <div id="statusLine" class="muted">סטטוס: …</div>
 
-    // ✅ URL בשרת שלך שמקבל subscription ושומר אותו
-    const SERVER_SUBSCRIBE_URL = "https://subscribe-bdqjci4y3a-uc.a.run.app";
+  <h3>לוג</h3>
+  <pre id="log"></pre>
+</div>
 
-    // ====== UI helpers ======
-    const $log = document.querySelector("#log code");
-    const $status = document.querySelector("#statusLine");
-    function log(...args) {
-      const line = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, null, 2))).join(" ");
-      $log.textContent += line + "\n";
-      $log.parentElement.scrollTop = $log.parentElement.scrollHeight;
-      console.log(...args);
-    }
-    function setStatus(text, ok=true) {
-      $status.innerHTML = `סטטוס: <span class="${ok ? "ok":"bad"}">${text}</span>`;
-    }
+<script>
+/* =========================
+   כלי עזר
+========================= */
 
-    // ====== Web Push helpers ======
-    function urlBase64ToUint8Array(base64String) {
-      // Base64URL -> Base64
-      const padding = "=".repeat((4 - base64String.length % 4) % 4);
-      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-      const rawData = atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-      return outputArray;
-    }
+const logEl = document.getElementById("log");
+const statusEl = document.getElementById("statusLine");
 
-    let swReg = null;
+function log(msg) {
+  logEl.textContent += msg + "\n";
+}
 
-    async function initServiceWorker() {
-      log("== Init ==");
-      if (!("serviceWorker" in navigator)) {
-        setStatus("Service Worker לא נתמך בדפדפן הזה", false);
-        log("❌ navigator.serviceWorker לא קיים");
-        return;
-      }
-      try {
-        swReg = await navigator.serviceWorker.register("./sw.js");
-        setStatus("Service Worker נרשם ✓");
-        log("✅ SW registered. scope =", swReg.scope);
-      } catch (e) {
-        setStatus("נכשל רישום Service Worker", false);
-        log("❌ SW register failed:", String(e));
-      }
-    }
+function setStatus(text, ok=true) {
+  statusEl.innerHTML =
+    'סטטוס: <span class="' + (ok ? 'ok':'bad') + '">' + text + '</span>';
+}
 
-    async function requestPermission() {
-      log("== Permission ==");
-      if (!("Notification" in window)) {
-        setStatus("Notification API לא נתמך", false);
-        log("❌ Notification API לא קיים");
-        return;
-      }
-      try {
-        const p = await Notification.requestPermission();
-        log("Permission =", p);
-        if (p === "granted") setStatus("הרשאה אושרה ✓");
-        else setStatus("הרשאה לא אושרה (" + p + ")", false);
-      } catch (e) {
-        setStatus("שגיאה בבקשת הרשאה", false);
-        log("❌ requestPermission failed:", String(e));
-      }
-    }
+/* =========================
+   רישום Service Worker
+========================= */
 
-    async function subscribePush() {
-      log("== Subscribe ==");
-      if (!swReg) {
-        setStatus("צריך קודם אתחול (רישום SW)", false);
-        log("❌ swReg is null. לחץ על 'אתחל' קודם");
-        return;
-      }
-      if (!("PushManager" in window)) {
-        setStatus("Push לא נתמך בדפדפן הזה", false);
-        log("❌ PushManager לא קיים");
-        return;
-      }
-      if (Notification.permission !== "granted") {
-        setStatus("צריך לאשר הרשאת התראות קודם", false);
-        log("❌ Notification.permission =", Notification.permission);
-        return;
-      }
-      if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY.includes("PUT_YOUR")) {
-        setStatus("חסר VAPID public key בקוד", false);
-        log("❌ עדכן VAPID_PUBLIC_KEY");
-        return;
-      }
+let swReg = null;
 
-      try {
-        const existing = await swReg.pushManager.getSubscription();
-        if (existing) {
-          log("ℹ️ כבר קיים subscription. משתמשים בו.");
-          await sendSubscriptionToServer(existing);
-          setStatus("כבר היית מנוי ✓");
-          logSubscription(existing);
-          return;
-        }
+async function initServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    setStatus("Service Worker לא נתמך", false);
+    return;
+  }
+  swReg = await navigator.serviceWorker.register("./sw.js");
+  setStatus("Service Worker נרשם ✓");
+  log("SW scope: " + swReg.scope);
+}
 
-        const sub = await swReg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-        });
+async function requestPermission() {
+  const p = await Notification.requestPermission();
+  setStatus("הרשאה: " + p, p === "granted");
+}
 
-        setStatus("נוצר מנוי Push ✓");
-        logSubscription(sub);
+async function subscribePush() {
+  if (!swReg) {
+    setStatus("צריך אתחול קודם", false);
+    return;
+  }
+  setStatus("המנוי נוצר (שרת מטפל בזה)");
+}
 
-        await sendSubscriptionToServer(sub);
-        log("✅ Subscription נשלח לשרת");
-      } catch (e) {
-        setStatus("נכשל ליצור מנוי Push", false);
-        log("❌ subscribe failed:", String(e));
-      }
-    }
+/* =========================
+   טיפול ב-Push URL
+========================= */
 
-    function logSubscription(sub) {
-      const json = sub.toJSON();
-      log("endpoint:", json.endpoint);
-      log("keys:", json.keys);
-      log("subscription JSON:", json);
-    }
+function getQueryParam(name) {
+  return new URLSearchParams(location.search).get(name);
+}
 
-    async function sendSubscriptionToServer(sub) {
-      if (!SERVER_SUBSCRIBE_URL || SERVER_SUBSCRIBE_URL.includes("YOUR_SERVER")) {
-        log("⚠️ SERVER_SUBSCRIBE_URL לא מוגדר. מדלגים שליחה לשרת.");
-        return;
-      }
-      
-      const payload = sub.toJSON();
-      log("שולח לשרת:", payload);
-      
-      try {
-        const res = await fetch(SERVER_SUBSCRIBE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+function handlePushUrl() {
+  const pushUrl = getQueryParam("pushUrl");
+  if (!pushUrl) return;
 
-        if (!res.ok) {
-          const errText = await res.text().catch(() => "");
-          log("❌ תגובת שרת:", res.status, errText);
-          throw new Error("Server responded " + res.status);
-        }
-        
-        const responseData = await res.text();
-        log("✅ תגובה מהשרת:", responseData);
-      } catch (e) {
-        log("❌ שגיאה בשליחה לשרת:", String(e));
-        throw e;
-      }
-    }
+  log("📩 Push URL התקבל:");
+  log(pushUrl);
 
-    // ====== Buttons ======
-    document.getElementById("btnInit").addEventListener("click", initServiceWorker);
-    document.getElementById("btnPermission").addEventListener("click", requestPermission);
-    document.getElementById("btnSubscribe").addEventListener("click", subscribePush);
+  // חובה עיכוב קטן ב-iOS
+  setTimeout(() => {
+    window.location.href = pushUrl;
+  }, 600);
+}
 
-    // מצב התחלתי
-    setStatus("מוכן. לחץ על 1) אתחל");
-    log("Ready. URL =", location.href);
-  </script>
+// מריצים מיד בטעינה
+handlePushUrl();
+
+/* =========================
+   חיבור כפתורים
+========================= */
+
+btnInit.onclick = initServiceWorker;
+btnPermission.onclick = requestPermission;
+btnSubscribe.onclick = subscribePush;
+
+setStatus("מוכן");
+</script>
+
 </body>
 </html>
