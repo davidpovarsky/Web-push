@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>PWA Push – בדיקה</title>
 
+  <!-- PWA -->
   <link rel="manifest" href="./manifest.json" />
-
   <meta name="theme-color" content="#111111" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -37,6 +37,7 @@
     }
     button.primary { background: #2e7dff; color: #fff; }
     button.secondary { background: #2a2a2a; color: #fff; }
+    button.warn { background: #ff9f2e; color: #000; }
     .muted { color: #bdbdbd; font-size: 13px; line-height: 1.35; }
     pre {
       background: #0f0f0f;
@@ -54,10 +55,11 @@
 <body>
 
 <div class="card">
-  <h1>📲 PWA Push – דף בדיקה</h1>
+  <h1>📲 PWA Push – בדיקה</h1>
+
   <div class="muted">
-    אפליקציית Web Push ל-iOS.<br>
-    אם הדף נפתח בעקבות Push – הוא יפעיל קישור שהועבר אליו.
+    אם האפליקציה נפתחה בעקבות Push –  
+    היא תנסה לפתוח את הקישור שהועבר (כולל קיצור דרך).
   </div>
 
   <div class="row">
@@ -67,6 +69,11 @@
   </div>
 
   <div id="statusLine" class="muted">סטטוס: …</div>
+
+  <!-- כפתור גיבוי – אם iOS חסם פתיחה אוטומטית -->
+  <div id="fallback" style="display:none;margin-top:10px">
+    <button id="btnOpen" class="warn">הפעל קיצור ידנית</button>
+  </div>
 
   <h3>לוג</h3>
   <pre id="log"></pre>
@@ -79,6 +86,8 @@
 
 const logEl = document.getElementById("log");
 const statusEl = document.getElementById("statusLine");
+const fallbackEl = document.getElementById("fallback");
+const btnOpen = document.getElementById("btnOpen");
 
 function log(msg) {
   logEl.textContent += msg + "\n";
@@ -111,36 +120,62 @@ async function requestPermission() {
 }
 
 async function subscribePush() {
-  if (!swReg) {
-    setStatus("צריך אתחול קודם", false);
-    return;
-  }
   setStatus("המנוי נוצר (שרת מטפל בזה)");
 }
 
 /* =========================
-   טיפול ב-Push URL
+   טיפול ב-Push URL (קריטי)
 ========================= */
 
 function getQueryParam(name) {
-  return new URLSearchParams(location.search).get(name);
+  return new URLSearchParams(window.location.search).get(name);
 }
 
-function handlePushUrl() {
-  const pushUrl = getQueryParam("pushUrl");
-  if (!pushUrl) return;
+let receivedPushUrl = null;
 
-  log("📩 Push URL התקבל:");
+function tryOpenPushUrl() {
+  if (!receivedPushUrl) return;
+
+  log("🚀 מנסה לפתוח קישור:");
+  log(receivedPushUrl);
+
+  // iOS דורש: load + timeout
+  setTimeout(() => {
+    window.location.href = receivedPushUrl;
+  }, 800);
+
+  // אם iOS חוסם – נציג כפתור ידני
+  setTimeout(() => {
+    fallbackEl.style.display = "block";
+    log("⚠️ אם הקיצור לא נפתח – לחץ על הכפתור");
+  }, 2000);
+}
+
+window.addEventListener("load", () => {
+  const pushUrl = getQueryParam("pushUrl");
+  if (!pushUrl) {
+    setStatus("נפתח רגיל");
+    return;
+  }
+
+  receivedPushUrl = pushUrl;
+
+  setStatus("נפתח מ-Push ✓");
+  log("📩 pushUrl התקבל:");
   log(pushUrl);
 
-  // חובה עיכוב קטן ב-iOS
-  setTimeout(() => {
-    window.location.href = pushUrl;
-  }, 600);
-}
+  tryOpenPushUrl();
+});
 
-// מריצים מיד בטעינה
-handlePushUrl();
+/* =========================
+   כפתור ידני (fallback)
+========================= */
+
+btnOpen.onclick = () => {
+  if (receivedPushUrl) {
+    window.location.href = receivedPushUrl;
+  }
+};
 
 /* =========================
    חיבור כפתורים
