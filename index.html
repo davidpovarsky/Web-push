@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>PWA Push – בדיקה</title>
+  <title>הרצת קיצורים</title>
 
   <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#111111" />
@@ -11,66 +11,411 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Arial; margin:0; padding:18px; background:#0b0b0b; color:#f3f3f3; }
-    .card { background:#151515; border:1px solid #2a2a2a; border-radius:14px; padding:14px; max-width:720px; }
-    h1 { margin:0 0 10px; font-size:20px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }
-    button { border:0; border-radius:12px; padding:10px 12px; font-size:14px; cursor:pointer; }
-    button.primary { background:#2e7dff; color:#fff; }
-    button.secondary { background:#2a2a2a; color:#fff; }
-    button.warn { background:#ffb74d; color:#000; }
-    .muted { color:#bdbdbd; font-size:13px; line-height:1.35; }
-    pre { background:#0f0f0f; border:1px solid #262626; border-radius:12px; padding:12px; overflow:auto; white-space:pre-wrap; word-break:break-word; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; }
-    .ok { color:#6bff95; }
-    .bad { color:#ff6b6b; }
-    .debugBox { margin-top:14px; background:#0f0f0f; border:1px dashed #3a3a3a; border-radius:12px; padding:12px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #f3f3f3;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* מסך ראשי יפה */
+    #mainScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+    }
+
+    #mainScreen.hidden { display: none; }
+
+    /* כפתור הגדרות */
+    .settingsBtn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .settingsBtn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
+    }
+
+    .settingsBtn svg {
+      width: 24px;
+      height: 24px;
+      stroke: #fff;
+    }
+
+    /* כותרת ראשית */
+    .mainTitle {
+      font-size: 42px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 60px;
+      text-align: center;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* אזור אנימציה */
+    .animationContainer {
+      width: 280px;
+      height: 280px;
+      position: relative;
+      margin-bottom: 40px;
+    }
+
+    /* קיצורים מסתובבים */
+    .shortcut {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      animation: orbit 8s linear infinite;
+    }
+
+    .shortcut:nth-child(1) { animation-delay: 0s; }
+    .shortcut:nth-child(2) { animation-delay: -2s; }
+    .shortcut:nth-child(3) { animation-delay: -4s; }
+    .shortcut:nth-child(4) { animation-delay: -6s; }
+
+    @keyframes orbit {
+      0% {
+        transform: rotate(0deg) translateX(110px) rotate(0deg);
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: rotate(360deg) translateX(110px) rotate(-360deg);
+        opacity: 1;
+      }
+    }
+
+    /* אנימציית קיצור בודד (כשנפתח מpush) */
+    .shortcutSingle {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 16px 64px rgba(102, 126, 234, 0.6);
+      }
+    }
+
+    .shortcutName {
+      margin-top: 30px;
+      font-size: 24px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* מסך הגדרות */
+    #settingsScreen {
+      display: none;
+      padding: 20px;
+      min-height: 100vh;
+      animation: slideIn 0.3s ease;
+    }
+
+    #settingsScreen.visible { display: block; }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .closeBtn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 12px 20px;
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .closeBtn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 720px;
+      backdrop-filter: blur(20px);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    button.secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    button.warn {
+      background: #ffb74d;
+      color: #000;
+    }
+
+    button.warn:hover {
+      background: #ffa726;
+      transform: translateY(-2px);
+    }
+
+    .muted {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 10px 0;
+    }
+
+    pre {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+    }
+
+    code {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+
+    .ok { color: #6bff95; }
+    .bad { color: #ff6b6b; }
+
+    .debugBox {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    #actionArea {
+      margin-top: 15px;
+    }
+
+    /* מסך ראשוני (setup) */
+    #setupScreen {
+      display: none;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    #setupScreen.visible { display: block; }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h1>📲 PWA Push – דף בדיקה</h1>
+<!-- מסך ראשי יפה -->
+<div id="mainScreen">
+  <button class="settingsBtn" onclick="showSettings()">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  </button>
 
-  <div class="muted">
-    תומך בשתי שיטות: <b>pushUrl</b> (אם השרת באמת מעביר url) + <b>pushBody</b> (fallback).<br>
-    אם פתיחה אוטומטית נחסמת – יש כפתור ידני.
+  <h1 class="mainTitle" id="mainTitle">הרצת קיצורים</h1>
+  
+  <div class="animationContainer" id="animationContainer">
+    <!-- אנימציה דינמית תיווצר כאן -->
   </div>
 
-  <div class="row" style="margin-top:12px;">
-    <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
-    <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
-    <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
-  </div>
+  <div class="shortcutName" id="shortcutName" style="display:none;"></div>
+</div>
 
-  <div class="muted" id="statusLine">סטטוס: …</div>
+<!-- מסך הגדרות -->
+<div id="settingsScreen">
+  <button class="closeBtn" onclick="hideSettings()">
+    ← חזרה
+  </button>
 
-  <div class="debugBox">
-    <h3>📩 מה הגיע מה-Push</h3>
-    <div class="muted">pushUrl (מה־URL parameter):</div>
-    <pre id="pushUrlBox">—</pre>
+  <div class="card">
+    <h1>🔧 הגדרות ומידע</h1>
 
-    <div class="muted">pushBody (מה־URL parameter):</div>
-    <pre id="pushRaw">—</pre>
-
-    <div class="muted">פיענוח SHORTCUT/PARAM מה־body:</div>
-    <pre id="pushParsed">—</pre>
-
-    <div class="muted">הקישור שייפתח בפועל:</div>
-    <pre id="finalUrlBox">—</pre>
-
-    <div id="actionArea" style="display:none;margin-top:10px">
-      <button id="btnRunShortcut" class="warn">▶️ הפעל ידנית</button>
+    <div class="muted">
+      תומך בשתי שיטות: <b>pushUrl</b> (אם השרת באמת מעביר url) + <b>pushBody</b> (fallback).<br>
+      אם פתיחה אוטומטית נחסמת – יש כפתור ידני.
     </div>
-  </div>
 
-  <h3 style="margin:14px 0 8px; font-size:15px;">לוג</h3>
-  <pre id="log"><code></code></pre>
+    <div class="row" style="margin-top:16px;">
+      <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
+      <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
+      <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
+    </div>
+
+    <div class="muted" id="statusLine">סטטוס: מוכן</div>
+
+    <div class="debugBox">
+      <h3>📩 מה הגיע מה-Push</h3>
+      <div class="muted">pushUrl (מה-URL parameter):</div>
+      <pre id="pushUrlBox">—</pre>
+
+      <div class="muted">pushBody (מה-URL parameter):</div>
+      <pre id="pushRaw">—</pre>
+
+      <div class="muted">פיענוח SHORTCUT/PARAM מה-body:</div>
+      <pre id="pushParsed">—</pre>
+
+      <div class="muted">הקישור שייפתח בפועל:</div>
+      <pre id="finalUrlBox">—</pre>
+
+      <div id="actionArea" style="display:none;">
+        <button id="btnRunShortcut" class="warn">▶️ הפעל ידנית</button>
+      </div>
+    </div>
+
+    <h3 style="margin:20px 0 12px;">לוג</h3>
+    <pre id="log"><code></code></pre>
+  </div>
+</div>
+
+<!-- מסך Setup ראשוני -->
+<div id="setupScreen">
+  <div class="card">
+    <h1>🚀 הגדרה ראשונית</h1>
+
+    <div class="muted">
+      זוהי הפעם הראשונה שאתה פותח את האפליקציה.<br>
+      יש להגדיר הרשאות התראות ורישום Push.
+    </div>
+
+    <div class="row" style="margin-top:20px;">
+      <button id="btnInit2" class="secondary">1) אתחל Service Worker</button>
+      <button id="btnPermission2" class="primary">2) בקש הרשאת התראות</button>
+      <button id="btnSubscribe2" class="primary">3) צור מנוי Push</button>
+    </div>
+
+    <div class="muted" id="statusLine2" style="margin-top:16px;">סטטוס: ממתין להגדרה</div>
+
+    <h3 style="margin:20px 0 12px;">לוג</h3>
+    <pre id="log2"><code></code></pre>
+  </div>
 </div>
 
 <script>
 /* =========================
-   הגדרות (כמו אצלך)
+   הגדרות
 ========================= */
 
 const VAPID_PUBLIC_KEY =
@@ -80,20 +425,66 @@ const SERVER_SUBSCRIBE_URL =
   "https://subscribe-bdqjci4y3a-uc.a.run.app";
 
 /* =========================
+   Local Storage
+========================= */
+
+const STORAGE_KEY = "pwa_push_setup_done";
+
+function isSetupDone() {
+  return localStorage.getItem(STORAGE_KEY) === "true";
+}
+
+function markSetupDone() {
+  localStorage.setItem(STORAGE_KEY, "true");
+}
+
+/* =========================
    UI helpers
 ========================= */
 
 const $log = document.querySelector("#log code");
+const $log2 = document.querySelector("#log2 code");
 const $status = document.querySelector("#statusLine");
+const $status2 = document.querySelector("#statusLine2");
 
 function log(...args) {
   const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
   $log.textContent += line + "\n";
   $log.parentElement.scrollTop = $log.parentElement.scrollHeight;
+  
+  // גם ללוג השני
+  $log2.textContent += line + "\n";
+  $log2.parentElement.scrollTop = $log2.parentElement.scrollHeight;
 }
 
 function setStatus(text, ok=true) {
-  $status.innerHTML = `סטטוס: <span class="${ok ? "ok":"bad"}">${text}</span>`;
+  const html = `סטטוס: <span class="${ok ? "ok":"bad"}">${text}</span>`;
+  $status.innerHTML = html;
+  $status2.innerHTML = html;
+}
+
+/* =========================
+   ניווט מסכים
+========================= */
+
+function showSettings() {
+  document.getElementById("mainScreen").classList.add("hidden");
+  document.getElementById("settingsScreen").classList.add("visible");
+}
+
+function hideSettings() {
+  document.getElementById("settingsScreen").classList.remove("visible");
+  document.getElementById("mainScreen").classList.remove("hidden");
+}
+
+function showSetup() {
+  document.getElementById("mainScreen").style.display = "none";
+  document.getElementById("setupScreen").classList.add("visible");
+}
+
+function showMain() {
+  document.getElementById("setupScreen").classList.remove("visible");
+  document.getElementById("mainScreen").style.display = "flex";
 }
 
 /* =========================
@@ -145,6 +536,14 @@ async function subscribePush() {
 
   setStatus("נוצר מנוי Push ✓");
   log("Subscription:", sub.toJSON());
+  
+  // סימון שההגדרה הושלמה
+  markSetupDone();
+  
+  // מעבר למסך הראשי
+  setTimeout(() => {
+    showMain();
+  }, 1000);
 }
 
 /* =========================
@@ -179,11 +578,38 @@ function tryOpen(url) {
 
   log("🚀 trying to open:", url);
 
-  // ניסיון אוטומטי (עבד אצלך)
+  // ניסיון אוטומטי
   setTimeout(() => {
     window.location.href = url;
   }, 700);
 }
+
+/* =========================
+   אנימציות
+========================= */
+
+function createOrbitAnimation() {
+  const container = document.getElementById("animationContainer");
+  container.innerHTML = `
+    <div class="shortcut">⚡</div>
+    <div class="shortcut">🎯</div>
+    <div class="shortcut">🚀</div>
+    <div class="shortcut">⭐</div>
+  `;
+}
+
+function createSingleAnimation(name) {
+  const container = document.getElementById("animationContainer");
+  container.innerHTML = '<div class="shortcutSingle">⚡</div>';
+  
+  document.getElementById("mainTitle").textContent = name || "מריץ קיצור...";
+  document.getElementById("shortcutName").style.display = "block";
+  document.getElementById("shortcutName").textContent = name || "";
+}
+
+/* =========================
+   אתחול
+========================= */
 
 window.addEventListener("load", () => {
   const pushUrl = decodeURIComponent(getParam("pushUrl"));
@@ -199,9 +625,25 @@ window.addEventListener("load", () => {
   log("pushUrl param =", pushUrl || "(empty)");
   log("pushBody param =", pushBody || "(empty)");
 
+  // בדיקה אם זו פתיחה ראשונה
+  if (!isSetupDone()) {
+    showSetup();
+    return;
+  }
+
   // ✅ עדיפות 1: אם הגיע pushUrl והוא כבר shortcuts:// → פותחים אותו
   if (pushUrl && pushUrl.startsWith("shortcuts://")) {
     setStatus("נפתח מ-Push (pushUrl) ✓");
+    
+    // חילוץ שם הקיצור
+    try {
+      const url = new URL(pushUrl);
+      const shortcutName = url.searchParams.get("name") || "קיצור";
+      createSingleAnimation(shortcutName);
+    } catch {
+      createSingleAnimation("קיצור");
+    }
+    
     tryOpen(pushUrl);
     return;
   }
@@ -210,12 +652,15 @@ window.addEventListener("load", () => {
   if (parsed.SHORTCUT) {
     const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
     setStatus("נפתח מ-Push (pushBody) ✓");
+    
+    createSingleAnimation(parsed.SHORTCUT);
     tryOpen(url);
     return;
   }
 
-  // אחרת: פתיחה רגילה
-  setStatus("נפתח רגיל (אין pushUrl/SHORTCUT)", true);
+  // אחרת: פתיחה רגילה עם אנימציה מסתובבת
+  setStatus("פתיחה רגילה ✓");
+  createOrbitAnimation();
   document.getElementById("finalUrlBox").textContent = "—";
   document.getElementById("actionArea").style.display = "none";
 });
@@ -228,9 +673,15 @@ document.getElementById("btnRunShortcut").onclick = () => {
    כפתורים
 ========================= */
 
+// מסך הגדרות
 btnInit.onclick = initServiceWorker;
 btnPermission.onclick = requestPermission;
 btnSubscribe.onclick = subscribePush;
+
+// מסך setup
+btnInit2.onclick = initServiceWorker;
+btnPermission2.onclick = requestPermission;
+btnSubscribe2.onclick = subscribePush;
 
 setStatus("מוכן");
 </script>
