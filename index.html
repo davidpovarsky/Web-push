@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>PWA Push – בדיקה</title>
 
-  <!-- ✅ חובה ל-PWA -->
+  <!-- PWA -->
   <link rel="manifest" href="./manifest.json" />
-
-  <!-- ✅ מומלץ ל-iOS -->
   <meta name="theme-color" content="#111111" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -39,6 +37,7 @@
     }
     button.primary { background: #2e7dff; color: #fff; }
     button.secondary { background: #2a2a2a; color: #fff; }
+    button.warn { background: #ffb74d; color: #000; }
     .muted { color: #bdbdbd; font-size: 13px; line-height: 1.35; }
     pre {
       background: #0f0f0f;
@@ -53,7 +52,6 @@
     .ok { color: #6bff95; }
     .bad { color: #ff6b6b; }
 
-    /* 🔧 תוספת דיבוג */
     .debugBox {
       margin-top: 14px;
       background: #0f0f0f;
@@ -64,38 +62,46 @@
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>📲 PWA Push – דף בדיקה</h1>
 
-    <div class="muted">
-      דף מלא לרישום Web Push (Service Worker + Permission + Subscription).<br>
-      למטה: דיבוג להצגת מידע שמגיע מה-Push.
-    </div>
+<div class="card">
+  <h1>📲 PWA Push – דף בדיקה</h1>
 
-    <!-- ====== הכפתורים המקוריים שלך ====== -->
-    <div class="row" style="margin-top:12px;">
-      <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
-      <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
-      <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
-    </div>
-
-    <div class="muted" id="statusLine">סטטוס: …</div>
-
-    <!-- ====== דיבוג Push ====== -->
-    <div class="debugBox">
-      <h3>🔎 מידע שהתקבל מה-Push</h3>
-      <pre id="pushRaw">—</pre>
-      <h3>📦 פיענוח</h3>
-      <pre id="pushParsed">—</pre>
-    </div>
-
-    <h3 style="margin:14px 0 8px; font-size:15px;">לוג</h3>
-    <pre id="log"><code></code></pre>
+  <div class="muted">
+    דף מלא לרישום Web Push + טיפול ב־Push שמכיל פקודה להרצת קיצור.<br>
+    אם iOS חוסם פתיחה אוטומטית – יוצג כפתור ידני.
   </div>
+
+  <!-- ====== כפתורים מקוריים ====== -->
+  <div class="row" style="margin-top:12px;">
+    <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
+    <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
+    <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
+  </div>
+
+  <div class="muted" id="statusLine">סטטוס: …</div>
+
+  <!-- ====== דיבוג Push ====== -->
+  <div class="debugBox">
+    <h3>📩 מידע שהתקבל מה-Push</h3>
+    <pre id="pushRaw">—</pre>
+
+    <h3>🧩 פיענוח</h3>
+    <pre id="pushParsed">—</pre>
+
+    <div id="actionArea" style="display:none;margin-top:10px">
+      <button id="btnRunShortcut" class="warn">
+        ▶️ הפעל קיצור דרך
+      </button>
+    </div>
+  </div>
+
+  <h3 style="margin:14px 0 8px; font-size:15px;">לוג</h3>
+  <pre id="log"><code></code></pre>
+</div>
 
 <script>
 /* =========================
-   הגדרות מקוריות שלך
+   הגדרות מקוריות
 ========================= */
 
 const VAPID_PUBLIC_KEY =
@@ -105,7 +111,7 @@ const SERVER_SUBSCRIBE_URL =
   "https://subscribe-bdqjci4y3a-uc.a.run.app";
 
 /* =========================
-   UI helpers (מקורי)
+   UI helpers
 ========================= */
 
 const $log = document.querySelector("#log code");
@@ -125,7 +131,7 @@ function setStatus(text, ok=true) {
 }
 
 /* =========================
-   Web Push helpers (מקורי)
+   Web Push – רישום
 ========================= */
 
 function urlBase64ToUint8Array(base64String) {
@@ -179,8 +185,10 @@ async function subscribePush() {
 }
 
 /* =========================
-   🔥 תוספת: קריאת body מה-Push
+   🔥 טיפול ב-Push Body
 ========================= */
+
+let lastShortcutUrl = null;
 
 function parseBody(body) {
   const out = {};
@@ -189,6 +197,31 @@ function parseBody(body) {
     if (k && v) out[k.trim()] = v.trim();
   });
   return out;
+}
+
+function buildShortcutUrl(name, param) {
+  let url =
+    "shortcuts://run-shortcut" +
+    "?name=" + encodeURIComponent(name);
+
+  if (param) {
+    url +=
+      "&input=text" +
+      "&text=" + encodeURIComponent(param);
+  }
+  return url;
+}
+
+function tryOpenShortcut(url) {
+  log("🚀 מנסה לפתוח:", url);
+
+  // ניסיון אוטומטי (iOS לפעמים חוסם)
+  setTimeout(() => {
+    window.location.href = url;
+  }, 700);
+
+  // כפתור ידני כ־fallback
+  document.getElementById("actionArea").style.display = "block";
 }
 
 window.addEventListener("load", () => {
@@ -205,7 +238,24 @@ window.addEventListener("load", () => {
     JSON.stringify(parsed, null, 2);
 
   log("Push body received:", decoded);
+
+  if (parsed.SHORTCUT) {
+    lastShortcutUrl =
+      buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
+
+    tryOpenShortcut(lastShortcutUrl);
+  }
 });
+
+/* =========================
+   כפתור ידני
+========================= */
+
+document.getElementById("btnRunShortcut").onclick = () => {
+  if (lastShortcutUrl) {
+    window.location.href = lastShortcutUrl;
+  }
+};
 
 /* =========================
    חיבור כפתורים
@@ -217,5 +267,6 @@ btnSubscribe.onclick = subscribePush;
 
 setStatus("מוכן");
 </script>
+
 </body>
 </html>
