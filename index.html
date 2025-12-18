@@ -50,7 +50,6 @@
       cursor: pointer;
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
-      z-index: 999;
     }
 
     .settingsBtn:hover {
@@ -327,6 +326,7 @@
 </head>
 <body>
 
+<!-- מסך ראשי יפה -->
 <div id="mainScreen">
   <button class="settingsBtn" onclick="showSettings()">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -338,11 +338,13 @@
   <h1 class="mainTitle" id="mainTitle">הרצת קיצורים</h1>
   
   <div class="animationContainer" id="animationContainer">
-    </div>
+    <!-- אנימציה דינמית תיווצר כאן -->
+  </div>
 
   <div class="shortcutName" id="shortcutName" style="display:none;"></div>
 </div>
 
+<!-- מסך הגדרות -->
 <div id="settingsScreen">
   <button class="closeBtn" onclick="hideSettings()">
     ← חזרה
@@ -388,6 +390,7 @@
   </div>
 </div>
 
+<!-- מסך Setup ראשוני -->
 <div id="setupScreen">
   <div class="card">
     <h1>🚀 הגדרה ראשונית</h1>
@@ -446,20 +449,18 @@ const $status2 = document.querySelector("#statusLine2");
 
 function log(...args) {
   const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
-  if ($log) {
-      $log.textContent += line + "\n";
-      $log.parentElement.scrollTop = $log.parentElement.scrollHeight;
-  }
-  if ($log2) {
-      $log2.textContent += line + "\n";
-      $log2.parentElement.scrollTop = $log2.parentElement.scrollHeight;
-  }
+  $log.textContent += line + "\n";
+  $log.parentElement.scrollTop = $log.parentElement.scrollHeight;
+  
+  // גם ללוג השני
+  $log2.textContent += line + "\n";
+  $log2.parentElement.scrollTop = $log2.parentElement.scrollHeight;
 }
 
 function setStatus(text, ok=true) {
   const html = `סטטוס: <span class="${ok ? "ok":"bad"}">${text}</span>`;
-  if ($status) $status.innerHTML = html;
-  if ($status2) $status2.innerHTML = html;
+  $status.innerHTML = html;
+  $status2.innerHTML = html;
 }
 
 /* =========================
@@ -536,8 +537,10 @@ async function subscribePush() {
   setStatus("נוצר מנוי Push ✓");
   log("Subscription:", sub.toJSON());
   
+  // סימון שההגדרה הושלמה
   markSetupDone();
   
+  // מעבר למסך הראשי
   setTimeout(() => {
     showMain();
   }, 1000);
@@ -555,7 +558,6 @@ function getParam(name) {
 
 function parseBody(body) {
   const out = {};
-  if (!body) return out;
   body.split(";").forEach(p => {
     const [k, v] = p.split("=");
     if (k && v) out[k.trim()] = v.trim();
@@ -576,47 +578,10 @@ function tryOpen(url) {
 
   log("🚀 trying to open:", url);
 
+  // ניסיון אוטומטי
   setTimeout(() => {
     window.location.href = url;
   }, 700);
-}
-
-/* =========================
-   פונקציה מרכזית לטיפול בנתונים
-========================= */
-
-function handlePushIncoming(pushUrl, pushBody) {
-  log("Handling push incoming:", { pushUrl, pushBody });
-
-  document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
-  document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
-
-  const parsed = parseBody(pushBody);
-  document.getElementById("pushParsed").textContent =
-    Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
-
-  // בדיקת עדיפות 1: pushUrl
-  if (pushUrl && pushUrl.startsWith("shortcuts://")) {
-    setStatus("נפתח מ-Push (pushUrl) ✓");
-    try {
-      const urlObj = new URL(pushUrl);
-      const shortcutName = urlObj.searchParams.get("name") || "קיצור";
-      createSingleAnimation(shortcutName);
-    } catch {
-      createSingleAnimation("קיצור");
-    }
-    tryOpen(pushUrl);
-    return;
-  }
-
-  // בדיקת עדיפות 2: pushBody
-  if (parsed.SHORTCUT) {
-    const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
-    setStatus("נפתח מ-Push (pushBody) ✓");
-    createSingleAnimation(parsed.SHORTCUT);
-    tryOpen(url);
-    return;
-  }
 }
 
 /* =========================
@@ -631,65 +596,92 @@ function createOrbitAnimation() {
     <div class="shortcut">🚀</div>
     <div class="shortcut">⭐</div>
   `;
-  document.getElementById("mainTitle").textContent = "הרצת קיצורים";
-  document.getElementById("shortcutName").style.display = "none";
 }
 
 function createSingleAnimation(name) {
   const container = document.getElementById("animationContainer");
   container.innerHTML = '<div class="shortcutSingle">⚡</div>';
   
-  document.getElementById("mainTitle").textContent = "מריץ קיצור...";
+  document.getElementById("mainTitle").textContent = name || "מריץ קיצור...";
   document.getElementById("shortcutName").style.display = "block";
   document.getElementById("shortcutName").textContent = name || "";
 }
 
 /* =========================
-   אתחול ומאזינים
+   אתחול
 ========================= */
-
-// מאזין להודעות חיות מה-Service Worker (כשהדף פתוח)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    log("Message received from SW:", event.data);
-    if (event.data && event.data.type === 'PUSH_RECEIVED') {
-      handlePushIncoming(event.data.pushUrl, event.data.pushBody);
-    }
-  });
-}
 
 window.addEventListener("load", () => {
   const pushUrl = decodeURIComponent(getParam("pushUrl"));
   const pushBody = decodeURIComponent(getParam("pushBody"));
 
+  document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
+  document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
+
+  const parsed = pushBody ? parseBody(pushBody) : {};
+  document.getElementById("pushParsed").textContent =
+    Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
+
+  log("pushUrl param =", pushUrl || "(empty)");
+  log("pushBody param =", pushBody || "(empty)");
+
+  // בדיקה אם זו פתיחה ראשונה
   if (!isSetupDone()) {
     showSetup();
     return;
   }
 
-  if (pushUrl || pushBody) {
-    handlePushIncoming(pushUrl, pushBody);
-  } else {
-    setStatus("פתיחה רגילה ✓");
-    createOrbitAnimation();
+  // ✅ עדיפות 1: אם הגיע pushUrl והוא כבר shortcuts:// → פותחים אותו
+  if (pushUrl && pushUrl.startsWith("shortcuts://")) {
+    setStatus("נפתח מ-Push (pushUrl) ✓");
+    
+    // חילוץ שם הקיצור
+    try {
+      const url = new URL(pushUrl);
+      const shortcutName = url.searchParams.get("name") || "קיצור";
+      createSingleAnimation(shortcutName);
+    } catch {
+      createSingleAnimation("קיצור");
+    }
+    
+    tryOpen(pushUrl);
+    return;
   }
-});
 
-/* =========================
-   כפתורים
-========================= */
+  // ✅ עדיפות 2: אם לא הגיע url, נבנה מה-body
+  if (parsed.SHORTCUT) {
+    const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
+    setStatus("נפתח מ-Push (pushBody) ✓");
+    
+    createSingleAnimation(parsed.SHORTCUT);
+    tryOpen(url);
+    return;
+  }
+
+  // אחרת: פתיחה רגילה עם אנימציה מסתובבת
+  setStatus("פתיחה רגילה ✓");
+  createOrbitAnimation();
+  document.getElementById("finalUrlBox").textContent = "—";
+  document.getElementById("actionArea").style.display = "none";
+});
 
 document.getElementById("btnRunShortcut").onclick = () => {
   if (lastFinalUrl) window.location.href = lastFinalUrl;
 };
 
-document.getElementById("btnInit").onclick = initServiceWorker;
-document.getElementById("btnPermission").onclick = requestPermission;
-document.getElementById("btnSubscribe").onclick = subscribePush;
+/* =========================
+   כפתורים
+========================= */
 
-document.getElementById("btnInit2").onclick = initServiceWorker;
-document.getElementById("btnPermission2").onclick = requestPermission;
-document.getElementById("btnSubscribe2").onclick = subscribePush;
+// מסך הגדרות
+btnInit.onclick = initServiceWorker;
+btnPermission.onclick = requestPermission;
+btnSubscribe.onclick = subscribePush;
+
+// מסך setup
+btnInit2.onclick = initServiceWorker;
+btnPermission2.onclick = requestPermission;
+btnSubscribe2.onclick = subscribePush;
 
 setStatus("מוכן");
 </script>
