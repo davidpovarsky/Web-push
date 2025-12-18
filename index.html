@@ -12,13 +12,16 @@
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    
+    body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
       color: #f3f3f3;
       min-height: 100vh;
       overflow-x: hidden;
     }
+
+    /* מסך ראשי יפה */
     #mainScreen {
       display: flex;
       flex-direction: column;
@@ -28,8 +31,10 @@
       padding: 20px;
       position: relative;
     }
+
     #mainScreen.hidden { display: none; }
 
+    /* כפתור הגדרות */
     .settingsBtn {
       position: absolute;
       top: 20px;
@@ -46,12 +51,19 @@
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
     }
+
     .settingsBtn:hover {
       background: rgba(255, 255, 255, 0.2);
       transform: rotate(90deg);
     }
-    .settingsBtn svg { width: 24px; height: 24px; stroke: #fff; }
 
+    .settingsBtn svg {
+      width: 24px;
+      height: 24px;
+      stroke: #fff;
+    }
+
+    /* כותרת ראשית */
     .mainTitle {
       font-size: 42px;
       font-weight: 700;
@@ -63,11 +75,19 @@
       text-align: center;
       animation: fadeInUp 0.8s ease;
     }
+
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
+    /* אזור אנימציה */
     .animationContainer {
       width: 280px;
       height: 280px;
@@ -75,6 +95,7 @@
       margin-bottom: 40px;
     }
 
+    /* קיצורים מסתובבים */
     .shortcut {
       position: absolute;
       width: 60px;
@@ -88,16 +109,27 @@
       box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
       animation: orbit 8s linear infinite;
     }
+
     .shortcut:nth-child(1) { animation-delay: 0s; }
     .shortcut:nth-child(2) { animation-delay: -2s; }
     .shortcut:nth-child(3) { animation-delay: -4s; }
     .shortcut:nth-child(4) { animation-delay: -6s; }
+
     @keyframes orbit {
-      0% { transform: rotate(0deg) translateX(110px) rotate(0deg); opacity: 1; }
-      50% { opacity: 0.6; }
-      100% { transform: rotate(360deg) translateX(110px) rotate(-360deg); opacity: 1; }
+      0% {
+        transform: rotate(0deg) translateX(110px) rotate(0deg);
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: rotate(360deg) translateX(110px) rotate(-360deg);
+        opacity: 1;
+      }
     }
 
+    /* אנימציית קיצור בודד (כשנפתח מpush) */
     .shortcutSingle {
       width: 120px;
       height: 120px;
@@ -110,9 +142,16 @@
       box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
       animation: pulse 2s ease-in-out infinite;
     }
+
     @keyframes pulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4); }
-      50% { transform: scale(1.1); box-shadow: 0 16px 64px rgba(102, 126, 234, 0.6); }
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 16px 64px rgba(102, 126, 234, 0.6);
+      }
     }
 
     .shortcutName {
@@ -123,18 +162,31 @@
       text-align: center;
       animation: fadeIn 1s ease;
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* מסך הגדרות */
     #settingsScreen {
       display: none;
       padding: 20px;
       min-height: 100vh;
       animation: slideIn 0.3s ease;
     }
+
     #settingsScreen.visible { display: block; }
+
     @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .closeBtn {
@@ -151,7 +203,10 @@
       gap: 8px;
       transition: all 0.3s ease;
     }
-    .closeBtn:hover { background: rgba(255, 255, 255, 0.2); }
+
+    .closeBtn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
 
     .card {
       background: rgba(255, 255, 255, 0.05);
@@ -163,9 +218,18 @@
       margin-bottom: 20px;
     }
 
-    h1 { margin: 0 0 10px; font-size: 24px; font-weight: 600; }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      font-weight: 600;
+    }
 
-    .row { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
 
     button {
       border: 0;
@@ -176,22 +240,36 @@
       transition: all 0.3s ease;
       font-weight: 500;
     }
+
     button.primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: #fff;
     }
+
     button.primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
     }
+
     button.secondary {
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    button.secondary:hover { background: rgba(255, 255, 255, 0.2); }
-    button.warn { background: #ffb74d; color: #000; }
-    button.warn:hover { background: #ffa726; transform: translateY(-2px); }
+
+    button.secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    button.warn {
+      background: #ffb74d;
+      color: #000;
+    }
+
+    button.warn:hover {
+      background: #ffa726;
+      transform: translateY(-2px);
+    }
 
     .muted {
       color: rgba(255, 255, 255, 0.6);
@@ -211,7 +289,9 @@
       font-size: 12px;
     }
 
-    code { font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; }
+    code {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
 
     .ok { color: #6bff95; }
     .bad { color: #ff6b6b; }
@@ -224,16 +304,29 @@
       padding: 20px;
     }
 
-    h3 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+    h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
 
-    #actionArea { margin-top: 15px; }
+    #actionArea {
+      margin-top: 15px;
+    }
 
-    #setupScreen { display: none; padding: 20px; min-height: 100vh; }
+    /* מסך ראשוני (setup) */
+    #setupScreen {
+      display: none;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
     #setupScreen.visible { display: block; }
   </style>
 </head>
 <body>
 
+<!-- מסך ראשי יפה -->
 <div id="mainScreen">
   <button class="settingsBtn" onclick="showSettings()">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -243,14 +336,19 @@
   </button>
 
   <h1 class="mainTitle" id="mainTitle">הרצת קיצורים</h1>
-
-  <div class="animationContainer" id="animationContainer"></div>
+  
+  <div class="animationContainer" id="animationContainer">
+    <!-- אנימציה דינמית תיווצר כאן -->
+  </div>
 
   <div class="shortcutName" id="shortcutName" style="display:none;"></div>
 </div>
 
+<!-- מסך הגדרות -->
 <div id="settingsScreen">
-  <button class="closeBtn" onclick="hideSettings()">← חזרה</button>
+  <button class="closeBtn" onclick="hideSettings()">
+    ← חזרה
+  </button>
 
   <div class="card">
     <h1>🔧 הגדרות ומידע</h1>
@@ -270,10 +368,10 @@
 
     <div class="debugBox">
       <h3>📩 מה הגיע מה-Push</h3>
-      <div class="muted">pushUrl (מה-URL parameter / message):</div>
+      <div class="muted">pushUrl (מה-URL parameter):</div>
       <pre id="pushUrlBox">—</pre>
 
-      <div class="muted">pushBody (מה-URL parameter / message):</div>
+      <div class="muted">pushBody (מה-URL parameter):</div>
       <pre id="pushRaw">—</pre>
 
       <div class="muted">פיענוח SHORTCUT/PARAM מה-body:</div>
@@ -292,6 +390,7 @@
   </div>
 </div>
 
+<!-- מסך Setup ראשוני -->
 <div id="setupScreen">
   <div class="card">
     <h1>🚀 הגדרה ראשונית</h1>
@@ -352,7 +451,8 @@ function log(...args) {
   const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
   $log.textContent += line + "\n";
   $log.parentElement.scrollTop = $log.parentElement.scrollHeight;
-
+  
+  // גם ללוג השני
   $log2.textContent += line + "\n";
   $log2.parentElement.scrollTop = $log2.parentElement.scrollHeight;
 }
@@ -436,14 +536,18 @@ async function subscribePush() {
 
   setStatus("נוצר מנוי Push ✓");
   log("Subscription:", sub.toJSON());
-
+  
+  // סימון שההגדרה הושלמה
   markSetupDone();
-
-  setTimeout(() => { showMain(); }, 1000);
+  
+  // מעבר למסך הראשי
+  setTimeout(() => {
+    showMain();
+  }, 1000);
 }
 
 /* =========================
-   Push → קיצור דרך (משותף גם ל-URL וגם ל-SW message)
+   Push → קיצור דרך
 ========================= */
 
 let lastFinalUrl = null;
@@ -474,21 +578,15 @@ function tryOpen(url) {
 
   log("🚀 trying to open:", url);
 
+  // ניסיון אוטומטי
   setTimeout(() => {
     window.location.href = url;
   }, 700);
 }
 
-function updateDebugBoxes(pushUrl, pushBody) {
-  document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
-  document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
-
-  const parsed = pushBody ? parseBody(pushBody) : {};
-  document.getElementById("pushParsed").textContent =
-    Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
-
-  return parsed;
-}
+/* =========================
+   אנימציות
+========================= */
 
 function createOrbitAnimation() {
   const container = document.getElementById("animationContainer");
@@ -503,78 +601,10 @@ function createOrbitAnimation() {
 function createSingleAnimation(name) {
   const container = document.getElementById("animationContainer");
   container.innerHTML = '<div class="shortcutSingle">⚡</div>';
-
+  
   document.getElementById("mainTitle").textContent = name || "מריץ קיצור...";
   document.getElementById("shortcutName").style.display = "block";
   document.getElementById("shortcutName").textContent = name || "";
-}
-
-function handleIncomingPush(pushUrlRaw, pushBodyRaw, sourceLabel) {
-  const pushUrl = (pushUrlRaw || "").trim();
-  const pushBody = (pushBodyRaw || "").trim();
-
-  log(`📩 incoming push (${sourceLabel}):`, { pushUrl, pushBody });
-
-  // אופציונלי: לעדכן URL כדי שיהיה אפשר לראות דיבאג גם כשהחלון לא נטען מחדש
-  try {
-    const newUrl =
-      "./index.html?pushUrl=" + encodeURIComponent(pushUrl) +
-      "&pushBody=" + encodeURIComponent(pushBody);
-    history.replaceState(null, "", newUrl);
-  } catch (_) {}
-
-  const parsed = updateDebugBoxes(pushUrl, pushBody);
-
-  // אם עוד לא הוגדר — לא מריצים, רק מציגים
-  if (!isSetupDone()) {
-    showSetup();
-    return;
-  }
-
-  // ✅ עדיפות 1: pushUrl shortcuts://
-  if (pushUrl && pushUrl.startsWith("shortcuts://")) {
-    setStatus("נפתח מ-Push ✓");
-
-    try {
-      const url = new URL(pushUrl);
-      const shortcutName = url.searchParams.get("name") || "קיצור";
-      createSingleAnimation(shortcutName);
-    } catch {
-      createSingleAnimation("קיצור");
-    }
-
-    tryOpen(pushUrl);
-    return;
-  }
-
-  // ✅ עדיפות 2: build from body
-  if (parsed.SHORTCUT) {
-    const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
-    setStatus("נפתח מ-Push ✓");
-
-    createSingleAnimation(parsed.SHORTCUT);
-    tryOpen(url);
-    return;
-  }
-
-  // אחרת: אין מספיק מידע
-  setStatus("Push התקבל אבל אין SHORTCUT/URL", false);
-  createOrbitAnimation();
-  document.getElementById("finalUrlBox").textContent = "—";
-  document.getElementById("actionArea").style.display = "none";
-}
-
-/* =========================
-   🔥 קבלת הודעות מה-Service Worker (כשכבר פתוח!)
-========================= */
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.addEventListener("message", (event) => {
-    const msg = event.data || {};
-    if (msg.type === "PUSH_PAYLOAD") {
-      handleIncomingPush(msg.pushUrl || "", msg.pushBody || "", "sw-message");
-    }
-  });
 }
 
 /* =========================
@@ -585,23 +615,50 @@ window.addEventListener("load", () => {
   const pushUrl = decodeURIComponent(getParam("pushUrl"));
   const pushBody = decodeURIComponent(getParam("pushBody"));
 
+  document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
+  document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
+
+  const parsed = pushBody ? parseBody(pushBody) : {};
+  document.getElementById("pushParsed").textContent =
+    Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
+
   log("pushUrl param =", pushUrl || "(empty)");
   log("pushBody param =", pushBody || "(empty)");
 
-  // אם זו פתיחה ראשונה
+  // בדיקה אם זו פתיחה ראשונה
   if (!isSetupDone()) {
-    updateDebugBoxes(pushUrl, pushBody);
     showSetup();
     return;
   }
 
-  // אם יש פרמטרים מה-URL (מקרה של openWindow) — נריץ דרך אותו handler
-  if ((pushUrl && pushUrl !== "—") || (pushBody && pushBody !== "—")) {
-    handleIncomingPush(pushUrl, pushBody, "url-params");
+  // ✅ עדיפות 1: אם הגיע pushUrl והוא כבר shortcuts:// → פותחים אותו
+  if (pushUrl && pushUrl.startsWith("shortcuts://")) {
+    setStatus("נפתח מ-Push (pushUrl) ✓");
+    
+    // חילוץ שם הקיצור
+    try {
+      const url = new URL(pushUrl);
+      const shortcutName = url.searchParams.get("name") || "קיצור";
+      createSingleAnimation(shortcutName);
+    } catch {
+      createSingleAnimation("קיצור");
+    }
+    
+    tryOpen(pushUrl);
     return;
   }
 
-  // פתיחה רגילה
+  // ✅ עדיפות 2: אם לא הגיע url, נבנה מה-body
+  if (parsed.SHORTCUT) {
+    const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
+    setStatus("נפתח מ-Push (pushBody) ✓");
+    
+    createSingleAnimation(parsed.SHORTCUT);
+    tryOpen(url);
+    return;
+  }
+
+  // אחרת: פתיחה רגילה עם אנימציה מסתובבת
   setStatus("פתיחה רגילה ✓");
   createOrbitAnimation();
   document.getElementById("finalUrlBox").textContent = "—";
@@ -616,10 +673,12 @@ document.getElementById("btnRunShortcut").onclick = () => {
    כפתורים
 ========================= */
 
+// מסך הגדרות
 btnInit.onclick = initServiceWorker;
 btnPermission.onclick = requestPermission;
 btnSubscribe.onclick = subscribePush;
 
+// מסך setup
 btnInit2.onclick = initServiceWorker;
 btnPermission2.onclick = requestPermission;
 btnSubscribe2.onclick = subscribePush;
