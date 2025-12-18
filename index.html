@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
@@ -324,12 +323,10 @@
 
     #setupScreen.visible { display: block; }
   </style>
-
 </head>
 <body>
 
 <!-- מסך ראשי יפה -->
-
 <div id="mainScreen">
   <button class="settingsBtn" onclick="showSettings()">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -339,7 +336,7 @@
   </button>
 
   <h1 class="mainTitle" id="mainTitle">הרצת קיצורים</h1>
-
+  
   <div class="animationContainer" id="animationContainer">
     <!-- אנימציה דינמית תיווצר כאן -->
   </div>
@@ -348,7 +345,6 @@
 </div>
 
 <!-- מסך הגדרות -->
-
 <div id="settingsScreen">
   <button class="closeBtn" onclick="hideSettings()">
     ← חזרה
@@ -357,70 +353,63 @@
   <div class="card">
     <h1>🔧 הגדרות ומידע</h1>
 
-```
-<div class="muted">
-  תומך בשתי שיטות: <b>pushUrl</b> (אם השרת באמת מעביר url) + <b>pushBody</b> (fallback).<br>
-  אם פתיחה אוטומטית נחסמת – יש כפתור ידני.
-</div>
+    <div class="muted">
+      תומך בשתי שיטות: <b>pushUrl</b> (אם השרת באמת מעביר url) + <b>pushBody</b> (fallback).<br>
+      אם פתיחה אוטומטית נחסמת – יש כפתור ידני.
+    </div>
 
-<div class="row" style="margin-top:16px;">
-  <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
-  <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
-  <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
-</div>
+    <div class="row" style="margin-top:16px;">
+      <button id="btnInit" class="secondary">1) אתחל (רישום SW)</button>
+      <button id="btnPermission" class="primary">2) בקש הרשאת התראות</button>
+      <button id="btnSubscribe" class="primary">3) צור מנוי Push</button>
+    </div>
 
-<div class="muted" id="statusLine">סטטוס: מוכן</div>
+    <div class="muted" id="statusLine">סטטוס: מוכן</div>
 
-<div class="debugBox">
-  <h3>📩 מה הגיע מה-Push</h3>
-  <div class="muted">pushUrl (מה-URL parameter):</div>
-  <pre id="pushUrlBox">—</pre>
+    <div class="debugBox">
+      <h3>📩 מה הגיע מה-Push</h3>
+      <div class="muted">pushUrl (מה-URL parameter):</div>
+      <pre id="pushUrlBox">—</pre>
 
-  <div class="muted">pushBody (מה-URL parameter):</div>
-  <pre id="pushRaw">—</pre>
+      <div class="muted">pushBody (מה-URL parameter):</div>
+      <pre id="pushRaw">—</pre>
 
-  <div class="muted">פיענוח SHORTCUT/PARAM מה-body:</div>
-  <pre id="pushParsed">—</pre>
+      <div class="muted">פיענוח SHORTCUT/PARAM מה-body:</div>
+      <pre id="pushParsed">—</pre>
 
-  <div class="muted">הקישור שייפתח בפועל:</div>
-  <pre id="finalUrlBox">—</pre>
+      <div class="muted">הקישור שייפתח בפועל:</div>
+      <pre id="finalUrlBox">—</pre>
 
-  <div id="actionArea" style="display:none;">
-    <button id="btnRunShortcut" class="warn">▶️ הפעל ידנית</button>
-  </div>
-</div>
+      <div id="actionArea" style="display:none;">
+        <button id="btnRunShortcut" class="warn">▶️ הפעל ידנית</button>
+      </div>
+    </div>
 
-<h3 style="margin:20px 0 12px;">לוג</h3>
-<pre id="log"><code></code></pre>
-```
-
+    <h3 style="margin:20px 0 12px;">לוג</h3>
+    <pre id="log"><code></code></pre>
   </div>
 </div>
 
 <!-- מסך Setup ראשוני -->
-
 <div id="setupScreen">
   <div class="card">
     <h1>🚀 הגדרה ראשונית</h1>
 
-```
-<div class="muted">
-  זוהי הפעם הראשונה שאתה פותח את האפליקציה.<br>
-  יש להגדיר הרשאות התראות ורישום Push.
-</div>
+    <div class="muted">
+      זוהי הפעם הראשונה שאתה פותח את האפליקציה.<br>
+      יש להגדיר הרשאות התראות ורישום Push.
+    </div>
 
-<div class="row" style="margin-top:20px;">
-  <button id="btnInit2" class="secondary">1) אתחל Service Worker</button>
-  <button id="btnPermission2" class="primary">2) בקש הרשאת התראות</button>
-  <button id="btnSubscribe2" class="primary">3) צור מנוי Push</button>
-</div>
+    <div class="row" style="margin-top:20px;">
+      <button id="btnInit2" class="secondary">1) אתחל Service Worker</button>
+      <button id="btnPermission2" class="primary">2) בקש הרשאת התראות</button>
+      <button id="btnSubscribe2" class="primary">3) צור מנוי Push</button>
+    </div>
 
-<div class="muted" id="statusLine2" style="margin-top:16px;">סטטוס: ממתין להגדרה</div>
+    <div class="muted" id="statusLine2" style="margin-top:16px;">סטטוס: ממתין להגדרה</div>
 
-<h3 style="margin:20px 0 12px;">לוג</h3>
-<pre id="log2"><code></code></pre>
-```
-
+    <h3 style="margin:20px 0 12px;">לוג</h3>
+    <pre id="log2"><code></code></pre>
   </div>
 </div>
 
@@ -622,7 +611,7 @@ function createSingleAnimation(name) {
    אתחול
 ========================= */
 
-function handlePushNavigation() {
+window.addEventListener("load", () => {
   const pushUrl = decodeURIComponent(getParam("pushUrl"));
   const pushBody = decodeURIComponent(getParam("pushBody"));
 
@@ -674,59 +663,6 @@ function handlePushNavigation() {
   createOrbitAnimation();
   document.getElementById("finalUrlBox").textContent = "—";
   document.getElementById("actionArea").style.display = "none";
-}
-
-// טיפול בטעינה ראשונה
-window.addEventListener("load", handlePushNavigation);
-
-// 🔥 מאזין להודעות מה-Service Worker
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "PUSH_RECEIVED") {
-    log("📨 התקבלה הודעת push מה-SW (אפליקציה פתוחה)");
-    
-    const pushUrl = event.data.pushUrl || "";
-    const pushBody = event.data.pushBody || "";
-    
-    // עדכון תיבות המידע
-    document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
-    document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
-    
-    const parsed = pushBody ? parseBody(pushBody) : {};
-    document.getElementById("pushParsed").textContent =
-      Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
-    
-    log("pushUrl (from SW message) =", pushUrl || "(empty)");
-    log("pushBody (from SW message) =", pushBody || "(empty)");
-    
-    // חזרה למסך הראשי אם אנחנו בהגדרות
-    hideSettings();
-    
-    // ✅ עדיפות 1: אם הגיע pushUrl והוא כבר shortcuts://
-    if (pushUrl && pushUrl.startsWith("shortcuts://")) {
-      setStatus("נפתח מ-Push (pushUrl) ✓");
-      
-      try {
-        const url = new URL(pushUrl);
-        const shortcutName = url.searchParams.get("name") || "קיצור";
-        createSingleAnimation(shortcutName);
-      } catch {
-        createSingleAnimation("קיצור");
-      }
-      
-      tryOpen(pushUrl);
-      return;
-    }
-    
-    // ✅ עדיפות 2: בניה מה-body
-    if (parsed.SHORTCUT) {
-      const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
-      setStatus("נפתח מ-Push (pushBody) ✓");
-      
-      createSingleAnimation(parsed.SHORTCUT);
-      tryOpen(url);
-      return;
-    }
-  }
 });
 
 document.getElementById("btnRunShortcut").onclick = () => {
