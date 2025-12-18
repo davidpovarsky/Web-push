@@ -14,10 +14,12 @@ self.addEventListener("push", (event) => {
 
   try {
     if (event.data) {
+      // iOS/שרתים שונים – לפעמים json, לפעמים text
       const txt = event.data.text();
       try {
         data = JSON.parse(txt);
       } catch {
+        // לא JSON
         data = {};
         body = txt || "";
       }
@@ -29,16 +31,33 @@ self.addEventListener("push", (event) => {
   }
 
   const title = data.title || "התראה";
+
+  // 🔥 נסיון לקבל url – אם השרת מעביר אותו
   const pushUrl = (data.url || "").trim();
 
+  // 🔥 שולח הודעה לכל הלקוחות הפתוחים
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      data: {
-        pushUrl: pushUrl,
-        pushBody: body,
-      },
-    })
+    Promise.all([
+      // מציג התראה
+      self.registration.showNotification(title, {
+        body: body,
+        data: {
+          pushUrl: pushUrl,   // יכול להיות ריק אם השרת לא מעביר
+          pushBody: body      // תמיד יהיה זמין (כי זה מוצג בהתראה)
+        }
+      }),
+      
+      // שולח הודעה ללקוחות פתוחים
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'PUSH_RECEIVED',
+            pushUrl: pushUrl,
+            pushBody: body
+          });
+        });
+      })
+    ])
   );
 });
 
@@ -48,42 +67,24 @@ self.addEventListener("notificationclick", (event) => {
   const pushUrl = (event.notification.data?.pushUrl || "").trim();
   const pushBody = (event.notification.data?.pushBody || "").trim();
 
+  // מעבירים לשני הערוצים – כדי שתוכל לבדוק מה באמת הגיע
   const targetUrl =
     "./index.html?pushUrl=" + encodeURIComponent(pushUrl) +
     "&pushBody=" + encodeURIComponent(pushBody);
 
-  event.waitUntil((async () => {
-    // 1) אם יש חלון קיים — עדיף לפקס אותו ולשלוח אליו הודעה
-    const winClients = await clients.matchAll({
-      type: "window",
-      includeUncontrolled: true,
-    });
-
-    if (winClients && winClients.length) {
-      // בוחרים חלון "ראשי"
-      const client = winClients[0];
-
-      // ניסיון ניווט (לא תמיד נתמך/עובד ב-iOS, אבל לא מזיק)
-      try {
-        if (client.navigate) await client.navigate(targetUrl);
-      } catch (_) {}
-
-      try { if (client.focus) await client.focus(); } catch (_) {}
-
-      // 🔥 הדבר החשוב: להעביר payload לחלון שכבר פתוח
-      try {
-        client.postMessage({
-          type: "PUSH_PAYLOAD",
-          pushUrl,
-          pushBody,
-          ts: Date.now(),
-        });
-      } catch (_) {}
-
-      return;
-    }
-
-    // 2) אם אין חלון פתוח — לפתוח חדש עם הפרמטרים כמו קודם
-    await clients.openWindow(targetUrl);
-  })());
+  event.waitUntil(
+    // 🔥 מחפש אם יש חלון פתוח ומנווט אליו, אחרת פותח חדש
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // אם יש חלון פתוח, נווט אליו
+      for (let client of windowClients) {
+        if ('focus' in client) {
+          return client.focus().then(client => {
+            return client.navigate(targetUrl);
+          });
+        }
+      }
+      // אחרת פתח חלון חדש
+      return clients.openWindow(targetUrl);
+    })
+  );
 });
