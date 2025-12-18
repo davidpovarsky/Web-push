@@ -683,8 +683,68 @@ btnInit2.onclick = initServiceWorker;
 btnPermission2.onclick = requestPermission;
 btnSubscribe2.onclick = subscribePush;
 
-setStatus("מוכן");
+setStatus(“מוכן”);
+
+/* =========================
+מאזין להודעות מה-Service Worker
+========================= */
+
+if (‘serviceWorker’ in navigator) {
+navigator.serviceWorker.addEventListener(‘message’, (event) => {
+if (event.data && event.data.type === ‘PUSH_RECEIVED’) {
+log(“📨 קיבלנו הודעת Push בזמן שהדף פתוח!”);
+
+
+  const pushUrl = event.data.pushUrl || "";
+  const pushBody = event.data.pushBody || "";
+  
+  log("pushUrl =", pushUrl);
+  log("pushBody =", pushBody);
+  
+  // עדכון תיבות המידע
+  document.getElementById("pushUrlBox").textContent = pushUrl ? pushUrl : "—";
+  document.getElementById("pushRaw").textContent = pushBody ? pushBody : "—";
+  
+  const parsed = pushBody ? parseBody(pushBody) : {};
+  document.getElementById("pushParsed").textContent =
+    Object.keys(parsed).length ? JSON.stringify(parsed, null, 2) : "—";
+  
+  // ✅ עדיפות 1: אם הגיע pushUrl והוא כבר shortcuts:// → פותחים אותו
+  if (pushUrl && pushUrl.startsWith("shortcuts://")) {
+    setStatus("נפתח מ-Push (pushUrl) ✓");
+    
+    // חילוץ שם הקיצור
+    try {
+      const url = new URL(pushUrl);
+      const shortcutName = url.searchParams.get("name") || "קיצור";
+      createSingleAnimation(shortcutName);
+    } catch {
+      createSingleAnimation("קיצור");
+    }
+    
+    tryOpen(pushUrl);
+    return;
+  }
+  
+  // ✅ עדיפות 2: אם לא הגיע url, נבנה מה-body
+  if (parsed.SHORTCUT) {
+    const url = buildShortcutUrl(parsed.SHORTCUT, parsed.PARAM || "");
+    setStatus("נפתח מ-Push (pushBody) ✓");
+    
+    createSingleAnimation(parsed.SHORTCUT);
+    tryOpen(url);
+    return;
+  }
+  
+  log("⚠️ לא נמצא מידע על קיצור להפעלה");
+}
+
+
+});
+}
 </script>
+
+
 
 </body>
 </html>
